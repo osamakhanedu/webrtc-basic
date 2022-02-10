@@ -1,24 +1,25 @@
 <html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Webrtc</title>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Webrtc Learning</h1>
     <div id="selectRoom">
-        <label>Room Name:</label>
-        <input id="roomName" type="text" />
-        <button id="goRoom">Go</button>
+      <label>Room Name:</label>
+      <input id="roomName" type="text" />
+      <button id="goRoom">Go</button>
     </div>
     <div id="meetingRoom" style="display: none">
-        <vide id="localVideo" autoplay></vide>
-        <vide id="remoteVideo" autoplay></vide>
-
+      <video id="localVideo" autoplay></video>
+      <video id="remoteVideo" autoplay></video>
     </div>
 
     <script src="./main.js"></script>
-</body>
+  </body>
 </html>
