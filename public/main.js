@@ -20,24 +20,37 @@ const streamConstrains = {
   },
 };
 
+const socket = io();
+
 // get user media
 
 goBtnEle.onclick = () => {
   if (roomNameEle.value === "") {
     alert("Enter room name");
   } else {
-    // getting user media
-    navigator.mediaDevices
-      .getUserMedia(streamConstrains)
-      .then((stream) => {
-        localStream = stream;
-        localVideoEle.srcObject = stream;
-      })
-      .catch((error) => {
-        console.log("error", error);
-      });
+    roomName = roomNameEle.value;
+    socket.emit("create:join", roomName);
 
     selectRoomEle.style = "display:none";
     meetingRoomEle.style = "display:block";
   }
 };
+
+socket.on("created", (room) => {
+  // getting user media
+  navigator.mediaDevices
+    .getUserMedia(streamConstrains)
+    .then((stream) => {
+      localStream = stream;
+      localVideoEle.srcObject = stream;
+      isCaller = true;
+    })
+    .catch((error) => {
+      console.log("error", error);
+    });
+});
+// socket.on("joined",(room)=>{})
+// socket.on("ready",(room)=>{})
+// socket.on("candidate",(room)=>{})
+// socket.on("offer",(room)=>{})
+// socket.on("answer",(room)=>{})
