@@ -12,7 +12,7 @@ const iceServer = {
 };
 
 const streamConstrains = {
-  audio: true,
+  audio: true, // https://blog.addpipe.com/audio-constraints-getusermedia/  read this article
   video: {
     frameRate: { ideal: 24 },
     facingMode: "user",
@@ -37,6 +37,8 @@ goBtnEle.onclick = () => {
   }
 };
 
+// you are first person to join this room
+
 socket.on("created", (room) => {
   // getting user media
   navigator.mediaDevices
@@ -50,8 +52,27 @@ socket.on("created", (room) => {
       console.log("error", error);
     });
 });
-// socket.on("joined",(room)=>{})
-// socket.on("ready",(room)=>{})
-// socket.on("candidate",(room)=>{})
-// socket.on("offer",(room)=>{})
-// socket.on("answer",(room)=>{})
+
+// you are allow to join room
+socket.on("joined", (room) => {
+  // getting user media
+  navigator.mediaDevices
+    .getUserMedia(streamConstrains)
+    .then((stream) => {
+      localStream = stream;
+      localVideoEle.srcObject = stream;
+      socket.emit("ready", roomName);
+    })
+    .catch((error) => {
+      console.log("error", error);
+    });
+});
+
+// that mean user is ready
+socket.on("ready", (room) => {});
+
+socket.on("candidate", (room) => {});
+
+socket.on("offer", (room) => {});
+
+socket.on("answer", (room) => {});

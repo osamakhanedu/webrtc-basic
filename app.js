@@ -15,6 +15,7 @@ http.listen(PORT, () => {
 io.on("connection", (socket) => {
   console.log("a user connected");
 
+  //create or join room
   socket.on("create:join", (room) => {
     console.log("create a join room", room);
     const myRoom = io.sockets.adapter.rooms[room] || { length: 0 };
@@ -24,11 +25,11 @@ io.on("connection", (socket) => {
     if (numClient === 0) {
       // create room
       socket.join(room);
-      socket.emit("created", room);
+      socket.emit("created", room); // emit room created
     } else if (numClient === 1) {
       // join room
       socket.join(room);
-      socket.emit("joined", room);
+      socket.emit("joined", room); //
     } else {
       socket.emit("full", room);
     }
