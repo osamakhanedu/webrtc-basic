@@ -14,6 +14,7 @@ const iceServer = {
 const streamConstrains = {
   audio: true,
   video: {
+    frameRate: { ideal: 24 },
     facingMode: "user",
     width: { min: 1024, ideal: 1280, max: 1920 },
     height: { min: 576, ideal: 720, max: 1080 },
