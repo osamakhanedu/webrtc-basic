@@ -69,10 +69,67 @@ socket.on("joined", (room) => {
 });
 
 // that mean user is ready
-socket.on("ready", (room) => {});
+socket.on("ready", (room) => {
+  if (isCaller) {
+    rtcPeerConnection = new RTCPeerConnection(iceServer);
+    rtcPeerConnection.onicecandidate = oncIceCandidate;
+    rtcPeerConnection.ontrack = onAddStream;
+    // add video and audio tracks
+    rtcPeerConnection.addTrack(localStream.getTracks()[0], localStream);
+    rtcPeerConnection.addTrack(localStream.getTracks()[1], localStream);
+    rtcPeerConnection
+      .createOffer()
+      .then((sdp) => {
+        console.log("sdp", sdp);
+        rtcPeerConnection.setLocalDescription(sdp);
+        socket.emit("offer", {
+          type: "offer",
+          sdp: spd,
+          room: roomName,
+        });
+      })
+      .catch((error) => {
+        console.log("error while created offer", error);
+      });
+  }
+});
 
 socket.on("candidate", (room) => {});
 
-socket.on("offer", (room) => {});
+socket.on("offer", (event) => {
+  if (!isCaller) {
+    rtcPeerConnection = new RTCPeerConnection(iceServer);
+    rtcPeerConnection.onicecandidate = oncIceCandidate;
+    rtcPeerConnection.ontrack = onAddStream;
+    // add video and audio tracks
+    rtcPeerConnection.addTrack(localStream.getTracks()[0], localStream);
+    rtcPeerConnection.addTrack(localStream.getTracks()[1], localStream);
+    rtcPeerConnection.setRemoteDescription(new RTCSessionDescription(event));
+    rtcPeerConnection
+      .createAnswer()
+      .then((sdp) => {
+        console.log("sdp", sdp);
+        rtcPeerConnection.setLocalDescription(sdp);
 
-socket.on("answer", (room) => {});
+        socket.emit("answer", {
+          type: "answer",
+          sdp: spd,
+          room: roomName,
+        });
+      })
+      .catch((error) => {
+        console.log("error while created answer", error);
+      });
+  }
+});
+
+socket.on("answer", (event) => {
+  rtcPeerConnection.setRemoteDescription(new RTCSessionDescription(event));
+});
+
+function oncIceCandidate(params) {}
+
+function onAddStream(event) {
+  remoteVideoEle.srcObject = event.streams[0];
+  remoteStream = event.streams[0];
+}
