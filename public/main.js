@@ -12,7 +12,7 @@ const iceServer = {
 };
 
 const streamConstrains = {
-  audio: true, // https://blog.addpipe.com/audio-constraints-getusermedia/  read this article
+  // audio: true, // https://blog.addpipe.com/audio-constraints-getusermedia/  read this article
   video: {
     frameRate: { ideal: 24 },
     facingMode: "user",
@@ -39,40 +39,36 @@ goBtnEle.onclick = () => {
 
 // you are first person to join this room
 
-socket.on("created", (room) => {
-  // getting user media
-  navigator.mediaDevices
-    .getUserMedia(streamConstrains)
-    .then((stream) => {
-      localStream = stream;
-      localVideoEle.srcObject = stream;
-      isCaller = true;
-    })
-    .catch((error) => {
-      console.log("error", error);
-    });
+socket.on("created", async (room) => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia(streamConstrains);
+    localStream = stream;
+    localVideoEle.srcObject = stream;
+    isCaller = true;
+  } catch (error) {
+    console.log("create error", error);
+  }
 });
 
 // you are allow to join room
-socket.on("joined", (room) => {
-  // getting user media
-  navigator.mediaDevices
-    .getUserMedia(streamConstrains)
-    .then((stream) => {
-      localStream = stream;
-      localVideoEle.srcObject = stream;
-      socket.emit("ready", roomName);
-    })
-    .catch((error) => {
-      console.log("error", error);
-    });
+socket.on("joined", async (room) => {
+  try {
+    console.log("join event");
+    // getting user media
+    const stream = await navigator.mediaDevices.getUserMedia(streamConstrains);
+    localStream = stream;
+    localVideoEle.srcObject = stream;
+    socket.emit("ready", roomName);
+  } catch (error) {
+    console.log("joining error", error);
+  }
 });
 
 // that mean user is ready
 socket.on("ready", (room) => {
   if (isCaller) {
     rtcPeerConnection = new RTCPeerConnection(iceServer);
-    rtcPeerConnection.onicecandidate = oncIceCandidate;
+    rtcPeerConnection.onicecandidate = onIceCandidate;
     rtcPeerConnection.ontrack = onAddStream;
     // add video and audio tracks
     rtcPeerConnection.addTrack(localStream.getTracks()[0], localStream);
@@ -80,7 +76,7 @@ socket.on("ready", (room) => {
     rtcPeerConnection
       .createOffer()
       .then((sdp) => {
-        console.log("sdp", sdp);
+        console.log("sending offer", sdp);
         rtcPeerConnection.setLocalDescription(sdp);
         socket.emit("offer", {
           type: "offer",
@@ -94,10 +90,9 @@ socket.on("ready", (room) => {
   }
 });
 
-socket.on("candidate", (room) => {});
-
 socket.on("offer", (event) => {
   if (!isCaller) {
+    console.log("received offer", event);
     rtcPeerConnection = new RTCPeerConnection(iceServer);
     rtcPeerConnection.onicecandidate = oncIceCandidate;
     rtcPeerConnection.ontrack = onAddStream;
@@ -108,9 +103,8 @@ socket.on("offer", (event) => {
     rtcPeerConnection
       .createAnswer()
       .then((sdp) => {
-        console.log("sdp", sdp);
         rtcPeerConnection.setLocalDescription(sdp);
-
+        console.log("sending answer", sdp);
         socket.emit("answer", {
           type: "answer",
           sdp: spd,
@@ -124,10 +118,32 @@ socket.on("offer", (event) => {
 });
 
 socket.on("answer", (event) => {
+  console.log("receive answer", event);
   rtcPeerConnection.setRemoteDescription(new RTCSessionDescription(event));
 });
 
-function oncIceCandidate(params) {}
+socket.on("candidate", (event) => {
+  console.log("received candidate", event);
+  const candidate = new RTCIceCandidate({
+    sdpMLineIndex: event.label,
+    candidate: event.candidate,
+  });
+
+  rtcPeerConnection.addIceCandidate(candidate);
+});
+
+function onIceCandidate(event) {
+  if (event.candidate) {
+    console.log("Sending ice candidate", event.candidate);
+    socket.emit("candidate", {
+      type: "candidate",
+      label: event.candidate.sdpMLineIndex,
+      id: event.candidate.sdpMid,
+      candidate: event.candidate.candidate,
+      room: roomName,
+    });
+  }
+}
 
 function onAddStream(event) {
   remoteVideoEle.srcObject = event.streams[0];

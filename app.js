@@ -17,10 +17,10 @@ io.on("connection", (socket) => {
 
   //create or join room
   socket.on("create:join", (room) => {
-    console.log("create a join room", room);
-    const myRoom = io.sockets.adapter.rooms[room] || { length: 0 };
-    const numClient = myRoom.length;
-    console.log(room, "has", numClient, "client");
+    const myRoom = io.sockets.adapter.rooms.get(room) || { size: 0 };
+    console.log("myRoom", myRoom);
+    const numClient = myRoom.size;
+    console.log(room, "has", numClient, "client", numClient === 1);
 
     if (numClient === 0) {
       // create room
