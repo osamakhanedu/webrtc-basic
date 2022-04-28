@@ -4,7 +4,7 @@ const http = require("http").Server(app);
 const { Server } = require("socket.io");
 const io = new Server(http);
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 80;
 
 app.use(express.static("public"));
 
