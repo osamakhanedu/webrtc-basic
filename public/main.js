@@ -4,6 +4,7 @@ const roomNameEle = document.getElementById("roomName");
 const goBtnEle = document.getElementById("goRoom");
 const localVideoEle = document.getElementById("localVideo");
 const remoteVideoEle = document.getElementById("remoteVideo");
+const videoSelect = document.querySelector("select#videoSource");
 
 let roomName, localStream, remoteStream, rtcPeerConnection, isCaller;
 
@@ -11,20 +12,46 @@ const iceServer = {
   iceServer: [{ urls: "stun.l.google.com:19302" }],
 };
 
-const streamConstrains = {
-  // audio: true, // https://blog.addpipe.com/audio-constraints-getusermedia/  read this article
-  video: {
-    frameRate: { ideal: 24 },
-    facingMode: "user",
-    width: { min: 1024, ideal: 1280, max: 1920 },
-    height: { min: 576, ideal: 720, max: 1080 },
-  },
-};
+// const streamConstrains = {
+//   // audio: true, // https://blog.addpipe.com/audio-constraints-getusermedia/  read this article
+//   video: {
+//     frameRate: { ideal: 24 },
+//     facingMode: "user",
+//     width: { min: 1024, ideal: 1280, max: 1920 },
+//     height: { min: 576, ideal: 720, max: 1080 },
+//   },
+// };
 
 const socket = io();
 
-// get user media
+function gotDevices(deviceInfos) {
+  // Handles being called several times to update labels. Preserve values.
 
+  for (let i = 0; i !== deviceInfos.length; ++i) {
+    const deviceInfo = deviceInfos[i];
+    const option = document.createElement("option");
+    option.value = deviceInfo.deviceId;
+    if (deviceInfo.kind === "videoinput") {
+      option.text = deviceInfo.label || `camera ${videoSelect.length + 1}`;
+      videoSelect.appendChild(option);
+    } else {
+      console.log("Some other kind of source/device: ", deviceInfo);
+    }
+  }
+}
+
+function handleError(error) {
+  console.log(
+    "navigator.MediaDevices.getUserMedia error: ",
+    error.message,
+    error.name
+  );
+}
+
+// get devies
+navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(handleError);
+
+// get user media
 goBtnEle.onclick = () => {
   if (roomNameEle.value === "") {
     alert("Enter room name");
@@ -41,6 +68,11 @@ goBtnEle.onclick = () => {
 
 socket.on("created", async (room) => {
   try {
+    const videoSource = videoSelect.value;
+    console.log("vidoe source", videoSource);
+    const streamConstrains = {
+      video: { deviceId: videoSource ? { exact: videoSource } : undefined },
+    };
     const stream = await navigator.mediaDevices.getUserMedia(streamConstrains);
     localStream = stream;
     localVideoEle.srcObject = stream;
@@ -54,7 +86,13 @@ socket.on("created", async (room) => {
 socket.on("joined", async (room) => {
   try {
     console.log("join event");
-    // getting user media
+    // getting user media'
+    const videoSource = videoSelect.value;
+    console.log("vidoe source", videoSource);
+    const streamConstrains = {
+      video: { deviceId: videoSource ? { exact: videoSource } : undefined },
+    };
+
     const stream = await navigator.mediaDevices.getUserMedia(streamConstrains);
     localStream = stream;
     localVideoEle.srcObject = stream;
