@@ -110,7 +110,7 @@ socket.on("ready", (room) => {
     rtcPeerConnection.ontrack = onAddStream;
     // add video and audio tracks
     rtcPeerConnection.addTrack(localStream.getTracks()[0], localStream);
-    rtcPeerConnection.addTrack(localStream.getTracks()[1], localStream);
+    // rtcPeerConnection.addTrack(localStream.getTracks()[1], localStream);
     rtcPeerConnection
       .createOffer()
       .then((sdp) => {
@@ -118,7 +118,7 @@ socket.on("ready", (room) => {
         rtcPeerConnection.setLocalDescription(sdp);
         socket.emit("offer", {
           type: "offer",
-          sdp: spd,
+          sdp: sdp,
           room: roomName,
         });
       })
@@ -132,11 +132,11 @@ socket.on("offer", (event) => {
   if (!isCaller) {
     console.log("received offer", event);
     rtcPeerConnection = new RTCPeerConnection(iceServer);
-    rtcPeerConnection.onicecandidate = oncIceCandidate;
+    rtcPeerConnection.onicecandidate = onIceCandidate;
     rtcPeerConnection.ontrack = onAddStream;
     // add video and audio tracks
     rtcPeerConnection.addTrack(localStream.getTracks()[0], localStream);
-    rtcPeerConnection.addTrack(localStream.getTracks()[1], localStream);
+    // rtcPeerConnection.addTrack(localStream.getTracks()[1], localStream);
     rtcPeerConnection.setRemoteDescription(new RTCSessionDescription(event));
     rtcPeerConnection
       .createAnswer()
@@ -145,7 +145,7 @@ socket.on("offer", (event) => {
         console.log("sending answer", sdp);
         socket.emit("answer", {
           type: "answer",
-          sdp: spd,
+          sdp: sdp,
           room: roomName,
         });
       })
@@ -156,7 +156,7 @@ socket.on("offer", (event) => {
 });
 
 socket.on("answer", (event) => {
-  console.log("receive answer", event);
+  console.log("receive answer", event, rtcPeerConnection);
   rtcPeerConnection.setRemoteDescription(new RTCSessionDescription(event));
 });
 
@@ -167,6 +167,7 @@ socket.on("candidate", (event) => {
     candidate: event.candidate,
   });
 
+  console.log("rtcPeerConnection", rtcPeerConnection);
   rtcPeerConnection.addIceCandidate(candidate);
 });
 
@@ -184,6 +185,7 @@ function onIceCandidate(event) {
 }
 
 function onAddStream(event) {
+  console.log("onAdd Stream", event);
   remoteVideoEle.srcObject = event.streams[0];
   remoteStream = event.streams[0];
 }
