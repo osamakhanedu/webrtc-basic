@@ -5,8 +5,16 @@ const goBtnEle = document.getElementById("goRoom");
 const localVideoEle = document.getElementById("localVideo");
 const remoteVideoEle = document.getElementById("remoteVideo");
 const videoSelect = document.querySelector("select#videoSource");
+const h2CallName = document.getElementById("callName");
+const inputCallName = document.getElementById("inputCallName");
+const btnSetName = document.getElementById("setName");
 
-let roomName, localStream, remoteStream, rtcPeerConnection, isCaller;
+let roomName,
+  localStream,
+  remoteStream,
+  rtcPeerConnection,
+  isCaller,
+  dataChannel;
 
 const iceServer = {
   iceServer: [{ urls: "stun.l.google.com:19302" }],
@@ -61,6 +69,16 @@ goBtnEle.onclick = () => {
 
     selectRoomEle.style = "display:none";
     meetingRoomEle.style = "display:block";
+  }
+};
+
+btnSetName.onclick = () => {
+  if (inputCallName.value === "") {
+    alert("Enter call name");
+  } else {
+    console.log("data channel", dataChannel);
+    dataChannel.send(inputCallName.value);
+    h2CallName.innerText = inputCallName.value;
   }
 };
 
@@ -125,6 +143,18 @@ socket.on("ready", (room) => {
       .catch((error) => {
         console.log("error while created offer", error);
       });
+
+    dataChannel = rtcPeerConnection.createDataChannel(roomName);
+    dataChannel.onopen = (event) => {
+      console.log("log", event, "blue");
+    };
+    dataChannel.onclose = (event) => {
+      console.log("log", event, "blue");
+    };
+    dataChannel.onmessage = (event) => {
+      console.log("data channel event ready", event);
+      h2CallName.innerText = event.data;
+    };
   }
 });
 
@@ -152,6 +182,15 @@ socket.on("offer", (event) => {
       .catch((error) => {
         console.log("error while created answer", error);
       });
+
+    rtcPeerConnection.ondatachannel = (event) => {
+      console.log("offer data channel", data);
+      dataChannel = event.channel;
+      dataChannel.onmessage = (event) => {
+        console.log("data channel event  offer:", event);
+        h2CallName.innerText = event.data;
+      };
+    };
   }
 });
 
