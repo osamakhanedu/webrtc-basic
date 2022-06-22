@@ -139,6 +139,10 @@ socket.on("ready", (room) => {
           sdp: sdp,
           room: roomName,
         });
+
+        rtcPeerConnection.getStats().then((result) => {
+          console.log("Stats:", result);
+        });
       })
       .catch((error) => {
         console.log("error while created offer", error);
@@ -177,6 +181,10 @@ socket.on("offer", (event) => {
           type: "answer",
           sdp: sdp,
           room: roomName,
+        });
+
+        rtcPeerConnection.getStats().then((result) => {
+          console.log("Stats:", result);
         });
       })
       .catch((error) => {
